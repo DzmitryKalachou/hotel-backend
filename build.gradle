@@ -1,0 +1,170 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath('org.postgresql:postgresql:42.2.4')
+    }
+}
+
+plugins {
+    id "nu.studer.jooq" version "3.0.1"
+    id "org.flywaydb.flyway" version "5.1.4"
+    id "org.sonarqube" version "2.6.2"
+    id "org.springframework.boot" version "2.0.4.RELEASE"
+}
+
+
+
+ext {
+    datasource_url = project.hasProperty('datasource_url') ? project.getProperty('datasource_url') : "jdbc:postgresql://localhost:5432/backend?characterEncoding=UTF-8"
+    datasource_username = project.hasProperty('datasource_username') ? project.getProperty('datasource_username') : "backend"
+    datasource_password = project.hasProperty('datasource_password') ? project.getProperty('datasource_password') : "backend"
+}
+
+
+apply plugin: "java"
+apply plugin: "idea"
+apply plugin: "eclipse"
+apply plugin: "io.spring.dependency-management"
+
+
+group = 'com.example.hotel'
+version = '0.0.1-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    jcenter()
+}
+
+
+dependencies {
+    compile('org.springframework.boot:spring-boot-starter-jooq')
+    compile('org.springframework.boot:spring-boot-starter-validation')
+    compile('org.springframework.boot:spring-boot-starter-web')
+    compile('org.springframework.boot:spring-boot-starter-actuator')
+
+    compile("com.auth0:java-jwt:3.4.0")
+
+    annotationProcessor('org.projectlombok:lombok')
+    compileOnly('org.projectlombok:lombok')
+
+    compile('com.zaxxer:HikariCP')
+    compile('org.jooq:jooq:3.11.3')
+    runtime('org.postgresql:postgresql')
+
+    compile('org.apache.commons:commons-lang3:3.7')
+    compile('org.apache.commons:commons-collections4:4.1')
+    compile('commons-io:commons-io:2.6')
+
+    compile('io.springfox:springfox-swagger2:2.9.2')
+    compile('io.springfox:springfox-swagger-ui:2.9.2')
+
+    compile('io.vavr:vavr:0.9.2')
+
+
+    jooqRuntime('org.postgresql:postgresql:42.2.4')
+    jooqRuntime('org.jooq:jooq-codegen:3.11.3')
+    jooqRuntime('org.jooq:jooq-meta:3.11.3')
+    jooqRuntime('org.jooq:jooq:3.11.3')
+
+    testCompile("junit:junit")
+    testCompile('org.assertj:assertj-core')
+    testCompile("org.mockito:mockito-core")
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+}
+
+
+sourceSets {
+    generated {
+        java {
+            srcDirs = ['src/generated/java']
+        }
+        compileClasspath += sourceSets.main.runtimeClasspath
+    }
+    main {
+        java {
+            srcDirs += ['src/generated/java']
+        }
+    }
+}
+
+processResources {
+    filesMatching("*.yaml") {
+        expand(project.properties)
+    }
+    doLast {
+        if (file("out/production/resources/application.yaml").exists()) {
+            copy {
+                from 'build/resources/main/application.yaml'
+                into 'out/production/resources'
+            }
+        }
+    }
+}
+
+flyway {
+    url = "${datasource_url}"
+    user = "${datasource_username}"
+    password = "${datasource_password}"
+    locations = ['filesystem:sql/migration']
+    table = 'schema_version'
+    baselineOnMigrate = true
+    ignoreMissingMigrations = true
+}
+
+
+jar {
+    baseName = "hotel-backend"
+    version = "0.0.1-SNAPSHOT"
+}
+
+jooq {
+    version = '3.11.3'
+    hotel(sourceSets.main) {
+        jdbc {
+            driver = "org.postgresql.Driver"
+            url = "${datasource_url}"
+            user = "${datasource_username}"
+            password = "${datasource_password}"
+        }
+        generator {
+            name = 'org.jooq.codegen.DefaultGenerator'
+            strategy {
+                name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+            }
+            database {
+                name = 'org.jooq.meta.postgres.PostgresDatabase'
+                inputSchema = 'public'
+                excludes = 'schema_version|pgp_armor_headers'
+            }
+            generate {
+                relations = true
+                deprecated = false
+                records = true
+                fluentSetters = true
+                daos = false
+                pojos = false
+                immutablePojos = false
+            }
+            target {
+                packageName = "com.example.hotel.db"
+                directory = "src/generated/java"
+            }
+        }
+    }
+}
+
+clean {
+    delete sourceSets.generated.java.srcDirs
+}
+
+idea {
+    module {
+        sourceDirs += file('src/generated/java')
+    }
+}
+
+generateHotelJooqSchemaSource.dependsOn flywayMigrate

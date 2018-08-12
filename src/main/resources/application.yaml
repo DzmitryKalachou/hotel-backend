@@ -1,0 +1,34 @@
+spring:
+    jmx:
+        enabled: false
+    profiles:
+        active: dev
+    application:
+        admin:
+            enabled: false
+    datasource:
+        driver-class-name: org.postgresql.Driver
+        type: com.zaxxer.hikari.HikariDataSource
+        hikari:
+            minimum-idle: 5
+            maximum-pool-size: 15
+            connection-test-query: SELECT 1
+        url: jdbc:postgresql://localhost:5432/backend?characterEncoding=UTF-8
+        username: backend
+        password: backend
+    jooq:
+        sql-dialect: postgres
+
+jwt:
+    secret: 3bbcc9724c0651b05998d309a57e55cb
+
+
+logging:
+    level:
+        com.example.hotel: warn
+        org.springframework.web: warn
+        org.springframework.boot: warn
+        org.springframework.boot.web.embedded.tomcat: info
+
+
+

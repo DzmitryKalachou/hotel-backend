@@ -1,0 +1,30 @@
+version: '3.4'
+
+services:
+  db:
+    container_name: hotel_db
+    image: postgres:10.4-alpine
+    restart: always
+    ports:
+        - "5432:5432"
+    environment:
+      POSTGRES_DB: backend
+      POSTGRES_USER: backend
+      POSTGRES_PASSWORD: backend
+  app:
+     container_name: hotel_backend
+     image: hotel-backend:latest
+     restart: always
+     depends_on:
+       - db
+     ports:
+         - "8080:8080"
+     healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+        interval: 5s
+        timeout: 10s
+        retries: 3
+        start_period: 5s
+     environment:
+         SPRING_DATASOURCE_URL: jdbc:postgresql://hotel_db:5432/backend?characterEncoding=UTF-8
+         JAVA_OPTS: -Xms512m -Xmx1024m -XX:+UseG1GC -XX:+UseStringDeduplication -Djava.security.egd=file:/dev/./urandom
