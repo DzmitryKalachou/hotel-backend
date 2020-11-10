@@ -67,7 +67,7 @@ dependencies {
 
     jooqRuntime('org.postgresql:postgresql:42.2.4')
     jooqRuntime('org.jooq:jooq-codegen:3.11.3')
-    jooqRuntime('org.jooq:jooq-meta:3.11.3')
+    jooqRuntime('org.jooq:jooq-meta:3.14.2')
     jooqRuntime('org.jooq:jooq:3.11.3')
 
     testCompile("junit:junit")
