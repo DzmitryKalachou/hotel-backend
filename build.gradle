@@ -52,7 +52,7 @@ dependencies {
     compileOnly('org.projectlombok:lombok')
 
     compile('com.zaxxer:HikariCP')
-    compile('org.jooq:jooq:3.11.3')
+    compile('org.jooq:jooq:3.14.8')
     runtime('org.postgresql:postgresql')
 
     compile('org.apache.commons:commons-lang3:3.7')
